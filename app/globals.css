@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+  --primary: #e05d35;
+  --primary-dark: #c94d28;
+  --gold: #d4af37;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+.btn-primary {
+  @apply bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-md transition-colors;
+}
+
+.btn-secondary {
+  @apply border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors;
+}
+
+.card {
+  @apply bg-white rounded-lg shadow-md overflow-hidden;
+}
+
+.section-title {
+  @apply text-3xl font-bold mb-6;
+}
