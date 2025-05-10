@@ -1,22 +1,37 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { Minus, Plus, ShoppingCart } from "lucide-react"
-import { PRODUCTS } from "@/lib/data"
-import { useCart } from "@/hooks/use-cart"
-import type { ProductSize } from "@/lib/types"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { PRODUCTS } from "@/lib/data";
+import { useCart } from "@/hooks/use-cart";
+import type { ProductSize, Product } from "@/lib/types"; // Ensure these types are defined in your types file
 
-export default function ProductPage({ params }: { params: { productId: string } }) {
-  const router = useRouter()
-  const { addItem } = useCart()
-  const product = PRODUCTS.find((p) => p.id === params.productId)
+export default function ProductPage({ params }: { params: Promise<{ productId: string }> }) {
+  const router = useRouter();
+  const { addItem } = useCart();
+  const [productId, setProductId] = useState<string | null>(null);
+  const [product, setProduct] = useState<Product | null>(null); // Use the Product type for the product state
 
-  const [quantity, setQuantity] = useState(1)
-  const [size, setSize] = useState<ProductSize | undefined>(product?.sizes ? "regular" : undefined)
-  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
-  const [specialInstructions, setSpecialInstructions] = useState("")
+  const [quantity, setQuantity] = useState(1);
+  const [size, setSize] = useState<ProductSize | undefined>(undefined);
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [specialInstructions, setSpecialInstructions] = useState("");
+
+  useEffect(() => {
+    params.then((resolvedParams) => {
+      setProductId(resolvedParams.productId);
+    });
+  }, [params]);
+
+  useEffect(() => {
+    if (productId) {
+      const foundProduct = PRODUCTS.find((p) => p.id === productId);
+      setProduct(foundProduct || null);
+      setSize(foundProduct?.sizes ? "regular" : undefined);
+    }
+  }, [productId]);
 
   if (!product) {
     return (
@@ -27,53 +42,51 @@ export default function ProductPage({ params }: { params: { productId: string } 
           Back to Menu
         </button>
       </div>
-    )
+    );
   }
 
   const handleQuantityChange = (value: number) => {
-    setQuantity(Math.max(1, value))
-  }
+    setQuantity(Math.max(1, value));
+  };
 
   const handleAddOnToggle = (addOnId: string) => {
-    setSelectedAddOns((prev) => (prev.includes(addOnId) ? prev.filter((id) => id !== addOnId) : [...prev, addOnId]))
-  }
+    setSelectedAddOns((prev) =>
+      prev.includes(addOnId) ? prev.filter((id) => id !== addOnId) : [...prev, addOnId]
+    );
+  };
 
   const calculatePrice = () => {
-    let basePrice = product.price
+    let basePrice = product.price;
 
-    // Apply size price if available
     if (size && product.sizes && product.sizes[size]) {
-      basePrice = product.sizes[size] || basePrice
+      basePrice = product.sizes[size] || basePrice;
     }
 
-    // Add price of add-ons
-    let addOnTotal = 0
+    let addOnTotal = 0;
     if (selectedAddOns.length > 0 && product.addOns) {
       selectedAddOns.forEach((addOnId) => {
-        const addOn = product.addOns?.find((a) => a.id === addOnId)
+        const addOn = product.addOns?.find((a) => a.id === addOnId);
         if (addOn) {
-          addOnTotal += addOn.price
+          addOnTotal += addOn.price;
         }
-      })
+      });
     }
 
-    return (basePrice + addOnTotal) * quantity
-  }
+    return (basePrice + addOnTotal) * quantity;
+  };
 
   const handleAddToCart = () => {
-    addItem(product, quantity, size, selectedAddOns, specialInstructions || undefined)
-    router.push("/cart")
-  }
+    addItem(product, quantity, size, selectedAddOns, specialInstructions || undefined);
+    router.push("/cart");
+  };
 
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {/* Product Image */}
         <div className="relative h-[400px] rounded-lg overflow-hidden">
           <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
         </div>
 
-        {/* Product Details */}
         <div>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
           <p className="text-gray-600 mb-4">{product.description}</p>
@@ -174,5 +187,5 @@ export default function ProductPage({ params }: { params: { productId: string } 
         </div>
       </div>
     </div>
-  )
+  );
 }
